@@ -129,20 +129,15 @@ const Register: React.FC = () => {
         formData.phone,
         formData.password
       );
-      navigate('/login', { 
-        state: { 
-          message: 'Registration successful! Please login with your credentials.' 
+      // After successful registration, automatically log in
+      navigate('/login', {
+        state: {
+          message: 'Registration successful! Please login with your new account.'
         }
       });
     } catch (error: any) {
       console.error('Registration error:', error);
-      if (error.message.includes('email')) {
-        setErrors({ email: error.message });
-      } else if (error.message.includes('phone')) {
-        setErrors({ phone: error.message });
-      } else {
-        setErrors({ general: error.message || 'Registration failed. Please try again.' });
-      }
+      setErrors({ general: error.message || 'Registration failed. Please try again.' });
     } finally {
       setIsLoading(false);
     }

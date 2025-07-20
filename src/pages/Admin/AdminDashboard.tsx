@@ -71,28 +71,37 @@ const AdminDashboard: React.FC = () => {
         .order('created_at', { ascending: false })
         .limit(10);
 
-      if (ordersError) throw ordersError;
+      if (ordersError) {
+        console.error('Orders fetch error:', ordersError);
+        // Continue with empty orders instead of throwing
+      }
 
       // Fetch all orders for stats
       const { data: allOrders, error: allOrdersError } = await supabase
         .from('orders')
         .select('total, status');
 
-      if (allOrdersError) throw allOrdersError;
+      if (allOrdersError) {
+        console.error('All orders fetch error:', allOrdersError);
+        // Continue with empty orders
+      }
 
       // Fetch users count
       const { count: usersCount, error: usersError } = await supabase
         .from('users')
         .select('*', { count: 'exact', head: true });
 
-      if (usersError) throw usersError;
+      if (usersError) {
+        console.error('Users count fetch error:', usersError);
+        // Continue with 0 count
+      }
 
       // Calculate stats
-      const totalRevenue = allOrders?.reduce((sum, order) => sum + Number(order.total), 0) || 0;
-      const pendingOrders = allOrders?.filter(order => order.status === 'pending').length || 0;
+      const totalRevenue = (allOrders || []).reduce((sum, order) => sum + Number(order.total || 0), 0);
+      const pendingOrders = (allOrders || []).filter(order => order.status === 'pending').length;
 
       setStats({
-        totalOrders: allOrders?.length || 0,
+        totalOrders: (allOrders || []).length,
         totalRevenue,
         totalUsers: usersCount || 0,
         pendingOrders
@@ -101,6 +110,14 @@ const AdminDashboard: React.FC = () => {
       setRecentOrders(orders || []);
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
+      // Set default values on error
+      setStats({
+        totalOrders: 0,
+        totalRevenue: 0,
+        totalUsers: 0,
+        pendingOrders: 0
+      });
+      setRecentOrders([]);
     } finally {
       setIsLoading(false);
     }
